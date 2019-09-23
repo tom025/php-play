@@ -69,6 +69,7 @@ final class ComparisonTest extends TestCase
     }
 
     /**
+     * @uses         breakingSwitchStatement()
      * @dataProvider breakingSwitchStatementCases
      */
 
@@ -94,7 +95,8 @@ final class ComparisonTest extends TestCase
     }
 
     /**
-     * @uses         breakingSwitchStatement()
+     * @param $value
+     * @param $expectedCases
      * @uses         fallThroughSwitchStatement()
      * @dataProvider fallThroughSwitchStatementData
      */
@@ -104,7 +106,62 @@ final class ComparisonTest extends TestCase
         $this->_testFunction($functionUnderTest, $value, $expectedCases);
     }
 
-    private function _testFunction(string $functionUnderTest, $value, $expectedCases): void
+    /**
+     * @return array
+     */
+    public function multiCaseSwitchStatementCases()
+    {
+        return [
+            [2, ['default']],
+            [3, ['case 3, 4']],
+            [4, ['case 3, 4']],
+            [5, ['case 5']],
+            [6, ['default']]
+        ];
+    }
+
+    /**
+     * @param $value
+     * @param $expectedCases
+     * @uses         multiCaseSwitchStatement()
+     * @dataProvider multiCaseSwitchStatementCases()
+     */
+    public function testMultiCaseSwitchStatement($value, $expectedCases)
+    {
+        $this->_testFunction('multiCaseSwitchStatement', $value, $expectedCases);
+    }
+
+    /**
+     * @return array
+     */
+    public function conditionalSwitchStatementCases()
+    {
+        return [
+            'default case' => ['baz', ['default']],
+            'matches "bar"' => ['bar', ['matched regex']],
+            'matches "foo"' => ['foo', ['matched regex']],
+            'string with length greater than 4' => ['foobar', ['strlen > 4']]
+        ];
+    }
+
+
+    /**
+     * @dataProvider conditionalSwitchStatementCases()
+     * @param $value
+     * @param $expectedCases
+     */
+    public function testConditionalSwitchStatement($value, $expectedCases)
+    {
+        $this->_testFunction('conditionalSwitchStatement', $value, $expectedCases);
+    }
+
+
+    /**
+     * @param callable $functionUnderTest
+     * @param mixed $value
+     * @param string[] $expectedCases
+     */
+    private function _testFunction(callable $functionUnderTest, $value, $expectedCases): void
     {
         $actual = call_user_func($functionUnderTest, $value);
         assertThat(
@@ -117,6 +174,43 @@ final class ComparisonTest extends TestCase
             )
         );
     }
+
+}
+
+function conditionalSwitchStatement($a)
+{
+    $acc = [];
+    switch (true) {
+        case (strlen($a) > 4):
+            array_push($acc, 'strlen > 4');
+            break;
+        case (preg_match('/^(foo|bar)$/i', $a)):
+            array_push($acc, 'matched regex');
+            break;
+        default:
+            array_push($acc, 'default');
+            break;
+    }
+    return $acc;
+}
+
+function multiCaseSwitchStatement($a)
+{
+    $acc = [];
+    switch ($a) {
+        case 3:
+        case 4:
+            array_push($acc, 'case 3, 4');
+            break;
+        case 5:
+            array_push($acc, 'case 5');
+            break;
+        default:
+            array_push($acc, 'default');
+            break;
+    }
+    return $acc;
+
 }
 
 function breakingSwitchStatement($a)
@@ -137,6 +231,7 @@ function breakingSwitchStatement($a)
             break;
         default:
             array_push($acc, 'default');
+            break;
     }
     return $acc;
 }
